@@ -74,7 +74,31 @@ def mix_files(in_path, mix):
 
   return
 
-def distribute_files(disribute, out_path):
+def distribute_files(distribute, in_path, out_path):
+  if os.path.isdir(out_path):
+    logger.debug('Removing folder %s', out_path)
+    shutil.rmtree(out_path)
+
+  logger.debug('Listing files in %s', in_path)
+
+  filenames = []
+  for filename in os.listdir(in_path):
+    logger.debug('Found file %s', filename)
+    filenames.append(filename)
+
+  n = len(filenames)//distribute + 1
+  for i in range(n):
+    foldername = out_path + '/folder_' + str(i).zfill(3)
+    logger.debug('Creating folder %s', foldername)
+    pathlib.Path(foldername).mkdir(parents=True)
+    
+    
+    for j in range(distribute):
+      if (len(filenames) > 0):
+        logger.debug('Moving file %s in folder %s', filenames[0], foldername)
+        os.rename(os.path.join(in_path, filenames[0]), os.path.join(foldername, filenames[0]))
+        del filenames[0]
+
   return
 
 
@@ -88,7 +112,7 @@ def commands(create = 10, mix = True, distribute = 3, in_path='./input_folder', 
 
   create_files(create, in_path)
   mix_files(in_path, mix)
-  distribute_files(distribute, out_path)
+  distribute_files(distribute, in_path, out_path)
 
   return
 
