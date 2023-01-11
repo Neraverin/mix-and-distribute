@@ -24,10 +24,13 @@ def init_logger(log_level):
   logger.addHandler(log_console_handle)
   return
 
-def random_filename(in_path):
-  return os.path.join(in_path, str(random.randrange(10000)).zfill(5))
+def random_filename(in_path, extension):
+  return os.path.join(in_path, str(random.randrange(10000)).zfill(5) + extension)
 
 def create_files(create, in_path):
+  if (create == 0):
+    return
+
   if os.path.isdir(in_path):
     logger.debug('Removing folder %s', in_path)
     shutil.rmtree(in_path)
@@ -41,7 +44,7 @@ def create_files(create, in_path):
   n = 0
   filenames = []
   while n < create:
-    filename = random_filename(in_path)
+    filename = random_filename(in_path, '.jpg')
     if filename not in filenames:
       filenames.append(filename)
       n = n + 1
@@ -54,15 +57,19 @@ def create_files(create, in_path):
   return
 
 def mix_files(in_path, mix):
+  if not mix:
+    return
+
   logger.debug('Listing files in %s', in_path)
 
   filenames = []
   for filename in os.listdir(in_path):
     logger.debug('Found file %s', filename)
+    extension = '.' + filename.split('.')[-1]
 
     new_filename = ''
     while new_filename not in filenames:
-      new_filename = random_filename(in_path)
+      new_filename = random_filename(in_path, extension)
       if new_filename not in filenames:
         filenames.append(new_filename)
 
@@ -72,6 +79,9 @@ def mix_files(in_path, mix):
   return
 
 def distribute_files(distribute, in_path, out_path):
+  if (distribute == 0):
+    return
+
   if os.path.isdir(out_path):
     logger.debug('Removing folder %s', out_path)
     shutil.rmtree(out_path)
@@ -83,9 +93,13 @@ def distribute_files(distribute, in_path, out_path):
     logger.debug('Found file %s', filename)
     filenames.append(filename)
 
+  if (len(filenames) == 0):
+    logger.error('Folder %s is empty. No files to distribute', in_path)
+    return
+
   n = len(filenames)//distribute + 1
   for i in range(n):
-    foldername = out_path + '/folder_' + str(i).zfill(3)
+    foldername = os.path.join(out_path, 'folder_' + str(i).zfill(3))
     logger.debug('Creating folder %s', foldername)
     os.makedirs(foldername)
     
@@ -99,16 +113,39 @@ def distribute_files(distribute, in_path, out_path):
 
 
 def commands(create = 10, mix = True, distribute = 3, in_path='./input_folder', out_path='./test_folder', log_level='INFO'):
-  init_logger(log_level)
+  """Create or/and mix or/and distribute files in folders
 
-  logger.info('Starting mix-and-disribute with loglevel = %s', log_level)
-  logger.info('Creation params: create %s files with random names in %s folder', create, in_path)
-  logger.info('Mix params: %s', 'with mixing' if mix else 'witout mixing')
-  logger.info('Disribute params: saving new folders in %s folder', out_path)
+  Parameters
+  ----------
+  create : int
+    Number of test files you want to generate. Set to 0 to disable file generation.
+  mix : boolean
+    Mixing is renaming files to random names (to change file order).
+  distribute : int
+    How many files would be in every new created folder. Set to 0 to disable file distribution.
+    Warning! File distribution is moving files in your filesystem.
+  in_path : str
+    Path used for file generator and file mixer. Could be relative.
+  out_path : str
+    Path used for creating new folders by file distributor.
+  log_level: str
+    Logging level (default python logger levels).
+  """
 
-  create_files(create, in_path)
-  mix_files(in_path, mix)
-  distribute_files(distribute, in_path, out_path)
+  try:
+    init_logger(log_level)
+
+    logger.info('Starting mix-and-disribute with loglevel = %s', log_level)
+    logger.info('Creation params: create %s files with random names in %s folder', create, in_path)
+    logger.info('Mix params: %s', 'with mixing' if mix else 'witout mixing')
+    logger.info('Disribute params: saving new folders with %s files in %s folder', distribute, out_path)
+
+    create_files(create, in_path)
+    mix_files(in_path, mix)
+    distribute_files(distribute, in_path, out_path)
+
+  except Exception as e:
+    logger.error(e)
 
   return
 
