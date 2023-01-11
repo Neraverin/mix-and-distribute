@@ -1,34 +1,31 @@
 import fire
-import logging, sys, os, shutil, random, pathlib
+import logging, sys, os, shutil, random
 
 logger = logging.getLogger()
 
 def init_logger(log_level):
-  #logger = logging.getLogger()
+  # custom hndlers won't work without defaul logger configuration
   logger.setLevel(logging.DEBUG)
-  # file handler which logs even debug messages
+
   log_file_handle = logging.FileHandler('mix-and-disribute.log', mode='w')
   log_file_handle.setLevel(logging.DEBUG)
 
-  # console handler with a user log level
   log_console_handle = logging.StreamHandler(sys.stdout)
   numeric_log_level = getattr(logging, log_level.upper(), None)
   if not isinstance(numeric_log_level, int):
       raise ValueError('Invalid log level: %s' % log_level)
   log_console_handle.setLevel(numeric_log_level)
 
-  # create formatter and add it to the handlers
   formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(funcName)s - %(message)s')
   log_file_handle.setFormatter(formatter)
   log_console_handle.setFormatter(formatter)
 
-  # add the handlers to the logger
   logger.addHandler(log_file_handle)
   logger.addHandler(log_console_handle)
   return
 
 def random_filename(in_path):
-  return in_path + '/tempfile_' + str(random.randrange(10000)).zfill(5)
+  return os.path.join(in_path, str(random.randrange(10000)).zfill(5))
 
 def create_files(create, in_path):
   if os.path.isdir(in_path):
@@ -36,7 +33,7 @@ def create_files(create, in_path):
     shutil.rmtree(in_path)
 
   logger.debug('Creating new folder %s', in_path)
-  pathlib.Path(in_path).mkdir(parents=True)
+  os.makedirs(in_path)
 
   logger.debug('Generating file names')
   random.seed(a=None, version=2)
@@ -90,8 +87,7 @@ def distribute_files(distribute, in_path, out_path):
   for i in range(n):
     foldername = out_path + '/folder_' + str(i).zfill(3)
     logger.debug('Creating folder %s', foldername)
-    pathlib.Path(foldername).mkdir(parents=True)
-    
+    os.makedirs(foldername)
     
     for j in range(distribute):
       if (len(filenames) > 0):
