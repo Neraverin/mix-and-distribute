@@ -74,11 +74,12 @@ def mix_files(in_path, mix):
         logger.debug('Found file %s', filename)
         extension = '.' + filename.split('.')[-1]
 
-        new_filename = ''
-        while new_filename not in filenames:
+        new_filename = random_filename(in_path, extension)
+        while new_filename in filenames:
             new_filename = random_filename(in_path, extension)
-            if new_filename not in filenames:
-                filenames.append(new_filename)
+
+        logger.debug(f'Append {new_filename}')
+        filenames.append(new_filename)
 
         logger.debug('Renaming %s file into %s file', os.path.join(in_path, filename), new_filename)
         os.rename(os.path.join(in_path, filename), new_filename)
@@ -89,10 +90,6 @@ def mix_files(in_path, mix):
 def distribute_files(distribute, in_path, out_path):
     if (distribute == 0):
         return
-
-    if os.path.isdir(out_path):
-        logger.debug('Removing folder %s', out_path)
-        shutil.rmtree(out_path)
 
     logger.debug('Listing files in %s', in_path)
 
@@ -107,7 +104,12 @@ def distribute_files(distribute, in_path, out_path):
 
     n = len(filenames) // distribute + 1
     for i in range(n):
-        foldername = os.path.join(out_path, 'folder_' + str(i).zfill(3))
+        name_i = i
+        foldername = os.path.join(out_path, 'folder_' + str(name_i).zfill(3))
+        while os.path.isdir(foldername):
+            name_i = name_i + 1
+            foldername = os.path.join(out_path, 'folder_' + str(name_i).zfill(3))
+
         logger.debug('Creating folder %s', foldername)
         os.makedirs(foldername)
 
@@ -128,18 +130,18 @@ def commands(create=10, mix=True, distribute=3, in_path='./input_folder',
     Parameters
     ----------
     create : int
-      Number of test files you want to generate. Set to 0 to disable file generation.
+        Number of test files you want to generate. Set to 0 to disable file generation.
     mix : boolean
-      Mixing is renaming files to random names (to change file order).
+        Mixing is renaming files to random names (to change file order).
     distribute : int
-      How many files would be in every new created folder. Set to 0 to disable file distribution.
-      Warning! File distribution is moving files in your filesystem.
+        How many files would be in every new created folder. Set to 0 to disable file distribution.
+        Warning! File distribution is moving files in your filesystem.
     in_path : str
-      Path used for file generator and file mixer. Could be relative.
+        Path used for file generator and file mixer. Could be relative.
     out_path : str
-      Path used for creating new folders by file distributor.
+        Path used for creating new folders by file distributor.
     log_level: str
-      Logging level (default python logger levels).
+        Logging level (default python logger levels).
     """
 
     try:
