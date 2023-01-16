@@ -29,8 +29,8 @@ def init_logger(log_level):
     logger.addHandler(log_console_handle)
 
 
-def random_filename(in_path, extension):
-    return os.path.join(in_path, str(random.randrange(10000)).zfill(5) + extension)
+def random_filename(extension):
+    return str(random.randrange(100000)).zfill(5) + extension
 
 
 def create_files(create, in_path):
@@ -69,20 +69,24 @@ def mix_files(in_path, mix):
 
     logger.debug('Listing files in %s', in_path)
 
-    filenames = []
-    for filename in os.listdir(in_path):
-        logger.debug('Found file %s', filename)
-        extension = '.' + filename.split('.')[-1]
+    for old_filename in os.listdir(in_path):
+        filenames = os.listdir(in_path)
+        logger.debug('Found file %s', old_filename)
+        extension = '.' + old_filename.split('.')[-1]
+        extension = extension.lower()
 
-        new_filename = random_filename(in_path, extension)
+        new_filename = random_filename(extension)
+        logger.debug(f'Created name {new_filename}')
+
         while new_filename in filenames:
-            new_filename = random_filename(in_path, extension)
+            logger.debug('Found name %s, searching new', new_filename)
+            new_filename = random_filename(extension)
 
-        logger.debug(f'Append {new_filename}')
-        filenames.append(new_filename)
+        old_filename = os.path.join(in_path, old_filename)
+        new_filename = os.path.join(in_path, new_filename)
 
-        logger.debug('Renaming %s file into %s file', os.path.join(in_path, filename), new_filename)
-        os.rename(os.path.join(in_path, filename), new_filename)
+        logger.debug('Renaming %s file into %s file', old_filename, new_filename)
+        os.rename(old_filename, new_filename)
 
     return
 
